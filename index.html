@@ -2,151 +2,201 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lanzamiento de Tronco - Caber Toss Game</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@400;600;800&display=swap');
 
 body {
-    font-family: 'Montserrat', sans-serif;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: #4e8d35;
+font-family: 'Montserrat', sans-serif;
+user-select: none;
+-webkit-user-select: none;
+touch-action: none; /* Prevents touch gestures like page scroll during game interaction */
 }
 
 .font-cinzel {
-    font-family: 'Cinzel', serif;
+font-family: 'Cinzel', serif;
 }
 
+/* Glassmorphism panel styling */
 .glass-panel {
-    background: rgba(20, 30, 15, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+background: rgba(20, 30, 15, 0.75);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+/* Custom wood button effect */
 .wood-btn {
-    background: linear-gradient(135deg, #8B4513 0%, #5C2E0B 100%);
-    border: 2px solid #D2691E;
-    box-shadow: 0 6px 0 #3a1d07, 0 10px 20px rgba(0,0,0,0.4);
-    transition: all 0.1s ease;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+background: linear-gradient(135deg, #8B4513 0%, #5C2E0B 100%);
+border: 2px solid #D2691E;
+box-shadow: 0 6px 0 #3a1d07, 0 10px 20px rgba(0,0,0,0.4);
+transition: all 0.1s ease;
 }
 
 .wood-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 #3a1d07, 0 5px 10px rgba(0,0,0,0.4);
+transform: translateY(4px);
+box-shadow: 0 2px 0 #3a1d07, 0 5px 10px rgba(0,0,0,0.4);
 }
 
+/* Gauge Power Animation */
 .power-bar-fill {
-    transition: height 0.05s linear;
+transition: height 0.05s linear;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+width: 6px;
+}
+::-webkit-scrollbar-track {
+background: rgba(0,0,0,0.2);
+}
+::-webkit-scrollbar-thumb {
+background: #8B4513;
+border-radius: 3px;
 }
 </style>
 </head>
 <body class="bg-slate-900 text-white overflow-hidden h-screen w-screen flex flex-col justify-between">
 
 <!-- HUD Header -->
-<header class="relative z-10 p-3 flex justify-between items-start pointer-events-none gap-2">
-    <div class="glass-panel rounded-xl p-2.5 flex items-center space-x-2.5 pointer-events-auto shadow-xl border-amber-800/30">
-        <div class="bg-amber-800/40 p-2 rounded-lg border border-amber-600/40">
-            <i class="fa-solid fa-tree text-lg text-amber-500"></i>
-        </div>
-        <div>
-            <h1 class="font-cinzel text-sm md:text-xl font-black text-amber-200 tracking-wider">TIRAR TRONCOS</h1>
-            <p class="text-[10px] text-amber-400/80 font-semibold uppercase tracking-widest">Campeonato</p>
-        </div>
-    </div>
+<header class="relative z-10 p-4 flex justify-between items-start pointer-events-none">
+<div class="glass-panel rounded-2xl p-4 flex items-center space-x-4 pointer-events-auto shadow-2xl border-amber-800/30">
+<div class="bg-amber-800/40 p-3 rounded-xl border border-amber-600/40">
+<i class="fa-solid fa-tree text-2xl text-amber-500"></i>
+</div>
+<div>
+<h1 class="font-cinzel text-xl md:text-2xl font-black text-amber-200 tracking-wider">TIRAR TRONCOS</h1>
+<p class="text-xs text-amber-400/80 font-semibold uppercase tracking-widest">Campeonato Escocés</p>
+</div>
+</div>
 
-    <div class="flex gap-2 pointer-events-auto">
-        <div class="glass-panel rounded-xl p-2.5 text-center min-w-[75px] border-amber-700/30">
-            <p class="text-[9px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">Puntos</p>
-            <p id="scoreDisplay" class="text-xl font-black text-white font-cinzel">0</p>
-        </div>
-        <div class="glass-panel rounded-xl p-2.5 text-center min-w-[75px] border-amber-700/30">
-            <p class="text-[9px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">Récord</p>
-            <p id="highScoreDisplay" class="text-xl font-black text-amber-400 font-cinzel">0</p>
-        </div>
-    </div>
+<div class="flex gap-3 pointer-events-auto">
+<!-- Score Board -->
+<div class="glass-panel rounded-2xl p-4 text-center min-w-[120px] border-amber-700/30">
+<p class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Puntuación</p>
+<p id="scoreDisplay" class="text-3xl font-black text-white font-cinzel">0</p>
+</div>
+<!-- High Score Board -->
+<div class="glass-panel rounded-2xl p-4 text-center min-w-[120px] border-amber-700/30">
+<p class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Récord</p>
+<p id="highScoreDisplay" class="text-3xl font-black text-amber-400 font-cinzel">0</p>
+</div>
+<!-- QR Code Button -->
+<button id="qrBtn" class="glass-panel rounded-2xl p-4 flex flex-col items-center justify-center border-amber-700/30 hover:bg-amber-800/40 transition-colors">
+
+Santiago:
+<i class="fa-solid fa-qrcode text-2xl text-amber-400"></i>
+<span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider mt-1">QR</span>
+</button>
+</div>
 </header>
 
 <!-- Canvas Container for Three.js -->
 <div id="canvas-container" class="absolute inset-0 z-0"></div>
 
-<!-- Power & Angle Meter Overlay -->
-<div id="controls-overlay" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-3 pointer-events-none">
-    <div class="glass-panel p-2 rounded-xl flex flex-col items-center w-14">
-        <span class="text-[9px] font-bold text-amber-300 uppercase tracking-wider mb-1">Ángulo</span>
-        <div class="w-1.5 h-20 bg-slate-800 rounded-full relative overflow-hidden flex flex-col justify-end">
-            <div id="angleFill" class="w-full bg-gradient-to-t from-emerald-500 via-amber-400 to-rose-500 rounded-full" style="height: 50%;"></div>
-        </div>
-        <span id="angleText" class="text-[10px] font-black text-white mt-1">45°</span>
-    </div>
-
-    <div class="glass-panel p-2 rounded-xl flex flex-col items-center w-16">
-        <span class="text-[9px] font-bold text-amber-300 uppercase tracking-wider mb-1">Fuerza</span>
-        <div class="w-3 h-32 bg-slate-800 rounded-full relative overflow-hidden flex flex-col justify-end p-0.5 border border-slate-700">
-            <div id="powerFill" class="power-bar-fill w-full bg-gradient-to-t from-emerald-500 via-yellow-400 to-red-600 rounded-full" style="height: 0%;"></div>
-        </div>
-        <span id="powerText" class="text-[10px] font-black text-white mt-1">0%</span>
-    </div>
+<!-- Power & Angle Meter Overlay (Visible during throw preparation) -->
+<div id="controls-overlay" class="absolute right-6 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-4 pointer-events-none">
+<!-- Angle Indicator -->
+<div class="glass-panel p-3 rounded-2xl flex flex-col items-center w-16">
+<span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-2">Ángulo</span>
+<div class="w-2 h-28 bg-slate-800 rounded-full relative overflow-hidden flex flex-col justify-end">
+<div id="angleFill" class="w-full bg-gradient-to-t from-emerald-500 via-amber-400 to-rose-500 rounded-full" style="height: 50%;"></div>
+</div>
+<span id="angleText" class="text-xs font-black text-white mt-2">45°</span>
 </div>
 
-<div id="aimGuide" class="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none transition-opacity duration-300 w-11/12 max-w-xs">
-    <div class="glass-panel px-4 py-2.5 rounded-full border border-amber-500/30 shadow-xl">
-        <p class="text-xs font-semibold text-amber-200">
-            <i class="fa-solid fa-hand-pointer mr-1.5 animate-bounce"></i> Mantén presionado abajo para cargar
-        </p>
-    </div>
+<!-- Power Meter -->
+<div class="glass-panel p-3 rounded-2xl flex flex-col items-center w-20">
+<span class="text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-2">Fuerza</span>
+<div class="w-4 h-48 bg-slate-800 rounded-full relative overflow-hidden flex flex-col justify-end p-0.5 border border-slate-700">
+<div id="powerFill" class="power-bar-fill w-full bg-gradient-to-t from-emerald-500 via-yellow-400 to-red-600 rounded-full" style="height: 0%;"></div>
+</div>
+<span id="powerText" class="text-xs font-black text-white mt-2">0%</span>
+</div>
 </div>
 
-<footer class="relative z-10 p-4 pb-6 flex justify-center items-center pointer-events-none">
-    <button id="throwBtn" class="wood-btn pointer-events-auto w-full max-w-sm py-4 rounded-2xl text-lg font-black text-amber-100 tracking-wider font-cinzel flex items-center justify-center gap-2 shadow-2xl">
-        <i class="fa-solid fa-person-running text-xl"></i>
-        <span id="throwBtnText">¡MANTÉN PARA CARGAR!</span>
-    </button>
+<!-- Instructions & Aim Help -->
+<div id="aimGuide" class="absolute bottom-32 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none transition-opacity duration-300">
+<div class="glass-panel px-6 py-3 rounded-full border border-amber-500/30 shadow-xl">
+<p class="text-sm font-semibold text-amber-200">
+<i class="fa-solid fa-hand-pointer mr-2 animate-bounce"></i> Mantén presionado o presiona <strong class="text-white">ESPACIO</strong> para cargar fuerza
+</p>
+</div>
+</div>
+
+<!-- Footer Controls -->
+<footer class="relative z-10 p-6 flex justify-center items-center pointer-events-none">
+<button id="throwBtn" class="wood-btn pointer-events-auto px-10 py-4 rounded-2xl text-xl font-black text-amber-100 tracking-wider font-cinzel flex items-center justify-center gap-3 active:scale-95 transition-transform">
+<i class="fa-solid fa-person-running text-2xl"></i>
+<span id="throwBtnText">¡MANTÉN PARA CARGAR!</span>
+</button>
 </footer>
 
-<!-- Result Modal -->
+<!-- Result / Game Over Modal -->
 <div id="resultModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="glass-panel border-2 border-amber-600/50 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-        <div class="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl"></div>
-        <div class="w-16 h-16 bg-amber-600/30 rounded-2xl border border-amber-400/40 flex items-center justify-center mx-auto mb-3 text-amber-400 text-2xl">
-            <i id="resultIcon" class="fa-solid fa-trophy"></i>
-        </div>
-        <h2 id="resultTitle" class="text-2xl font-black font-cinzel text-amber-200 mb-1">¡EXCELENTE!</h2>
-        <p id="resultSubtitle" class="text-xs text-slate-300 mb-4">Tu tronco voló una distancia increíble.</p>
-        <div class="bg-slate-900/80 rounded-2xl p-3 border border-slate-800 mb-5 flex justify-around">
-            <div>
-                <span class="block text-[10px] font-bold text-amber-400/80 uppercase">Distancia</span>
-                <span id="modalDistance" class="text-xl font-black text-white font-cinzel">0.0 m</span>
-            </div>
-            <div class="w-px bg-slate-800"></div>
-            <div>
-                <span class="block text-[10px] font-bold text-amber-400/80 uppercase">Puntos</span>
-                <span id="modalScore" class="text-xl font-black text-amber-400 font-cinzel">+0</span>
-            </div>
-        </div>
-        <button id="retryBtn" class="wood-btn w-full py-3.5 rounded-xl text-base font-black text-amber-100 font-cinzel tracking-wider flex items-center justify-center gap-2">
-            <i class="fa-solid fa-rotate-right"></i> INTENTAR DE NUEVO
-        </button>
-    </div>
+<div class="glass-panel border-2 border-amber-600/50 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative overflow-hidden">
+<!-- Background glow -->
+<div class="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl"></div>
+
+<div class="w-20 h-20 bg-amber-600/30 rounded-2xl border border-amber-400/40 flex items-center justify-center mx-auto mb-4 text-amber-400 text-3xl">
+<i id="resultIcon" class="fa-solid fa-trophy"></i>
+</div>
+
+<h2 id="resultTitle" class="text-3xl font-black font-cinzel text-amber-200 mb-2">¡EXCELENTE LANZAMIENTO!</h2>
+<p id="resultSubtitle" class="text-sm text-slate-300 mb-6">Tu tronco voló una distancia increíble.</p>
+
+Santiago:
+<div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 mb-6 flex justify-around">
+<div>
+<span class="block text-xs font-bold text-amber-400/80 uppercase">Distancia</span>
+<span id="modalDistance" class="text-2xl font-black text-white font-cinzel">0.0 m</span>
+</div>
+<div class="w-px bg-slate-800"></div>
+<div>
+<span class="block text-xs font-bold text-amber-400/80 uppercase">Puntos</span>
+<span id="modalScore" class="text-2xl font-black text-amber-400 font-cinzel">+0</span>
+</div>
+</div>
+
+<button id="retryBtn" class="wood-btn w-full py-4 rounded-xl text-lg font-black text-amber-100 font-cinzel tracking-wider flex items-center justify-center gap-2">
+<i class="fa-solid fa-rotate-right"></i> INTENTAR DE NUEVO
+</button>
+</div>
+</div>
+
+<!-- QR Code Modal -->
+<div id="qrModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+<div class="glass-panel border-2 border-amber-600/50 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+<button id="closeQrBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
+<i class="fa-solid fa-xmark"></i>
+</button>
+<div class="w-12 h-12 bg-amber-600/30 rounded-xl border border-amber-400/40 flex items-center justify-center mx-auto mb-3 text-amber-400 text-xl">
+<i class="fa-solid fa-mobile-screen-button"></i>
+</div>
+<h3 class="text-xl font-black font-cinzel text-amber-200 mb-1">¡JUEGA EN TU MÓVIL!</h3>
+<p class="text-xs text-slate-300 mb-4">Escanea este código QR con la cámara de tu teléfono para jugar.</p>
+
+<!-- QR Code Image Container -->
+<div class="bg-white p-4 rounded-2xl inline-block shadow-inner mb-4">
+<img id="qrImage" src="" alt="Código QR del Juego" class="w-48 h-48 mx-auto">
+</div>
+
+<p class="text-[11px] text-amber-400/80 italic">Asegúrate de que tu teléfono esté en la misma red o que la página sea accesible externamente.</p>
+</div>
 </div>
 
 <script>
+/* GAME STATE VARIABLES */
 let scene, camera, renderer;
-let logMesh;
+let logMesh, shadowPlane;
+let trees = [];
+let particles = [];
 
+// Physics & Game Loop State
 let isCharging = false;
 let power = 0;
 let powerDirection = 1;
@@ -156,10 +206,13 @@ let isLogFlying = false;
 let score = 0;
 let highScore = localStorage.getItem('caber_toss_highscore') || 0;
 
-let logPos = new THREE.Vector3(0, 2, 0);
+// Log Velocity & Position
+let logPos = new THREE.Vector3(0, 1.5, 0);
 let logVel = new THREE.Vector3(0, 0, 0);
 let logRotVel = new THREE.Vector3(0, 0, 0);
+let groundY = 0;
 
+// HTML Elements
 const powerFill = document.getElementById('powerFill');
 const powerText = document.getElementById('powerText');
 const angleFill = document.getElementById('angleFill');
@@ -171,223 +224,210 @@ const highScoreDisplay = document.getElementById('highScoreDisplay');
 const resultModal = document.getElementById('resultModal');
 const modalDistance = document.getElementById('modalDistance');
 const modalScore = document.getElementById('modalScore');
+
+Santiago:
 const retryBtn = document.getElementById('retryBtn');
 const aimGuide = document.getElementById('aimGuide');
+const qrBtn = document.getElementById('qrBtn');
+const qrModal = document.getElementById('qrModal');
+const closeQrBtn = document.getElementById('closeQrBtn');
+const qrImage = document.getElementById('qrImage');
 
 highScoreDisplay.textContent = highScore;
 
+/* INITIALIZE THREE.JS SCENE */
 function initScene() {
-    const container = document.getElementById('canvas-container');
+const container = document.getElementById('canvas-container');
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB);
-    // Se elimina la niebla densa (FogExp2) que suele causar pantallas enteras de un solo color en celulares gama baja/media
-    scene.fog = null;
+scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87CEEB); // Sky Blue
+scene.fog = new THREE.FogExp2(0x87CEEB, 0.008);
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = false; // Desactivar sombras pesadas para evitar bloqueos gráficos en móviles
-    container.appendChild(renderer.domElement);
+renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambientLight);
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.0);
-    sunLight.position.set(40, 80, 20);
-    scene.add(sunLight);
+const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
+sunLight.position.set(40, 80, 20);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 300;
+const d = 100;
+sunLight.shadow.camera.left = -d;
+sunLight.shadow.camera.right = d;
+sunLight.shadow.camera.top = d;
+sunLight.shadow.camera.bottom = -d;
+scene.add(sunLight);
 
-    createGround();
-    createLog();
-    createEnvironment();
-    resetCamera();
+// Ground creation
+createGround();
 
-    window.addEventListener('resize', onWindowResize);
+// Create Log (Player's Caber)
+createLog();
+
+// Decorative Environment (Trees & Field lines)
+createEnvironment();
+
+// Set Initial Camera Position
+resetCamera();
+
+// Resize listener
+window.addEventListener('resize', onWindowResize);
 }
 
 function createGround() {
-    const groundGeo = new THREE.PlaneGeometry(300, 600);
-    const groundMat = new THREE.MeshBasicMaterial({ color: 0x4e8d35 }); // Cambiado a MeshBasicMaterial para máxima compatibilidad móvil
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
+// Main Grass Field
+const groundGeo = new THREE.PlaneGeometry(300, 600);
+const groundMat = new THREE.MeshStandardMaterial({ 
+color: 0x4e8d35, 
+roughness: 0.9, 
+metalness: 0.1 
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
 
-    for (let z = -20; z >= -400; z -= 20) {
-        const lineGeo = new THREE.PlaneGeometry(40, 0.8);
-        const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true });
-        const line = new THREE.Mesh(lineGeo, lineMat);
-        line.rotation.x = -Math.PI / 2;
-        line.position.set(0, 0.02, z);
-        scene.add(line);
-    }
+// Distance Markers (Lines every 10 meters)
+for (let z = -20; z >= -400; z -= 20) {
+const lineGeo = new THREE.PlaneGeometry(40, 0.8);
+const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true });
+const line = new THREE.Mesh(lineGeo, lineMat);
+line.rotation.x = -Math.PI / 2;
+line.position.set(0, 0.02, z);
+scene.add(line);
+}
 }
 
 function createLog() {
-    const logGroup = new THREE.Group();
-    const logGeo = new THREE.CylinderGeometry(0.35, 0.28, 7, 16);
-    const logMat = new THREE.MeshBasicMaterial({ color: 0x6e4320 }); // Material básico optimizado
-    const logMeshBody = new THREE.Mesh(logGeo, logMat);
-    logGroup.add(logMeshBody);
+// Wood Log Mesh Group
+const logGroup = new THREE.Group();
 
-    logMesh = logGroup;
-    scene.add(logMesh);
-    resetLogPosition();
+// Main Cylinder Body
+const logGeo = new THREE.CylinderGeometry(0.35, 0.28, 7, 16);
+const logMat = new THREE.MeshStandardMaterial({
+color: 0x6e4320,
+roughness: 0.8,
+metalness: 0.1
+});
+const logMeshBody = new THREE.Mesh(logGeo, logMat);
+logMeshBody.castShadow = true;
+logMeshBody.receiveShadow = true;
+logGroup.add(logMeshBody);
+
+Santiago:
+// End Cap (Inner Rings detail simulated with lighter color)
+const capGeo = new THREE.CircleGeometry(0.34, 16);
+const capMat = new THREE.MeshStandardMaterial({ color: 0xc49a6c, roughness: 0.6 });
+
+const topCap = new THREE.Mesh(capGeo, capMat);
+topCap.rotation.x = -Math.PI / 2;
+topCap.position.y = 3.51;
+logGroup.add(topCap);
+
+const bottomCap = new THREE.Mesh(capGeo, capMat);
+bottomCap.rotation.x = Math.PI / 2;
+bottomCap.position.y = -3.51;
+logGroup.add(bottomCap);
+
+logMesh = logGroup;
+scene.add(logMesh);
+resetLogPosition();
 }
 
 function createEnvironment() {
-    const treeGeo = new THREE.ConeGeometry(3, 10, 6);
-    const trunkGeo = new THREE.CylinderGeometry(0.5, 0.7, 3, 6);
-    const leavesMat = new THREE.MeshBasicMaterial({ color: 0x1e4620 });
-    const trunkMat = new THREE.MeshBasicMaterial({ color: 0x3d2314 });
+// Generate Pine Trees along the sides
+const treeGeo = new THREE.ConeGeometry(3, 10, 6);
+const trunkGeo = new THREE.CylinderGeometry(0.5, 0.7, 3, 6);
+const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1e4620, roughness: 0.8 });
+const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.9 });
 
-    for (let i = 0; i < 20; i++) {
-        const tree = new THREE.Group();
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-        trunk.position.y = 1.5;
-        tree.add(trunk);
+for (let i = 0; i < 80; i++) {
+const tree = new THREE.Group();
+const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+trunk.position.y = 1.5;
+trunk.castShadow = true;
+tree.add(trunk);
 
-        const leaves = new THREE.Mesh(treeGeo, leavesMat);
-        leaves.position.y = 6;
-        tree.add(leaves);
+const leaves = new THREE.Mesh(treeGeo, leavesMat);
+leaves.position.y = 6;
+leaves.castShadow = true;
+tree.add(leaves);
 
-        const side = Math.random() > 0.5 ? 1 : -1;
-        const x = (25 + Math.random() * 20) * side;
-        const z = 10 - Math.random() * 150;
+// Scatter on left and right sides
+const side = Math.random() > 0.5 ? 1 : -1;
+const x = (25 + Math.random() * 50) * side;
+const z = 20 - Math.random() * 450;
+const scale = 0.8 + Math.random() * 0.6;
 
-        tree.position.set(x, 0, z);
-        scene.add(tree);
-    }
+tree.position.set(x, 0, z);
+tree.scale.set(scale, scale, scale);
+scene.add(tree);
+}
 }
 
 function resetLogPosition() {
-    logPos.set(0, 2.5, 0);
-    if (logMesh) {
-        logMesh.position.copy(logPos);
-        logMesh.rotation.set(0, 0, 0);
-    }
-    logVel.set(0, 0, 0);
-    logRotVel.set(0, 0, 0);
-    isLogFlying = false;
+logPos.set(0, 3.5, 0);
+logMesh.position.copy(logPos);
+logMesh.rotation.set(Math.PI / 4, 0, 0); // Tilted forward ready for launch
+logVel.set(0, 0, 0);
+logRotVel.set(0, 0, 0);
+isLogFlying = false;
 }
 
 function resetCamera() {
-    camera.position.set(0, 4, 8.5);
-    camera.lookAt(0, 2, -2);
-}
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+camera.position.set(0, 4, 12);
+camera.lookAt(0, 3, -10);
 }
 
 function animate() {
-    requestAnimationFrame(animate);
+requestAnimationFrame(animate);
 
-    if (!isLogFlying) {
-        angle += 0.8 * angleDirection;
-        if (angle > 75 || angle < 25) angleDirection *= -1;
+// Dynamic Angle Oscillation when setting up throw
+if (!isLogFlying) {
+angle += 0.8 * angleDirection;
+if (angle > 75 || angle < 25) angleDirection *= -1;
 
-        angleFill.style.height = `${((angle - 25) / 50) * 100}%`;
-        angleText.textContent = `${Math.round(angle)}°`;
+angleFill.style.height = ${((angle - 25) / 50) * 100}%;
+angleText.textContent = ${Math.round(angle)}°;
 
-        if (isCharging) {
-            power += 2.2 * powerDirection;
-            if (power >= 100) { power = 100; powerDirection = -1; }
-            if (power <= 0) { power = 0; powerDirection = 1; }
+// Handle Power Meter Charging
+if (isCharging) {
+power += 2.2 * powerDirection;
+if (power >= 100) { power = 100; powerDirection = -1; }
+if (power <= 0) { power = 0; powerDirection = 1; }
 
-            powerFill.style.height = `${power}%`;
-            powerText.textContent = `${Math.round(power)}%`;
-        }
-    } else {
-        updateLogPhysics();
-    }
+powerFill.style.height = ${power}%;
+powerText.textContent = ${Math.round(power)}%;
+}
+} else {
+// Physics Simulation during flight
+updateLogPhysics();
+}
 
-    renderer.render(scene, camera);
+renderer.render(scene, camera);
 }
 
 function updateLogPhysics() {
-    logVel.y -= 0.015;
-    logPos.add(logVel);
-    logMesh.position.copy(logPos);
+// Apply Gravity
+logVel.y -= 0.015;
 
-    logMesh.rotation.x += logRotVel.x;
-    logMesh.rotation.y += logRotVel.y;
-    logMesh.rotation.z += logRotVel.z;
+// Apply Velocity to Position
+logPos.add(logVel);
+logMesh.position.copy(logPos);
 
-    camera.position.z = logPos.z + 8.5;
-    camera.position.y = Math.max(logPos.y + 2, 4);
-    camera.position.x = logPos.x * 0.5;
-    camera.lookAt(logPos.x, logPos.y, logPos.z - 3);
-
-    if (logPos.y <= 1.8) {
-        logPos.y = 1.8;
-        isLogFlying = false;
-        
-        const distance = Math.abs(Math.round(logPos.z * 10) / 10);
-        const earnedPoints = Math.round(distance * 5);
-        
-        score += earnedPoints;
-        scoreDisplay.textContent = score;
-
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('caber_toss_highscore', highScore);
-            highScoreDisplay.textContent = highScore;
-        }
-
-        modalDistance.textContent = `${distance} m`;
-        modalScore.textContent = `+${earnedPoints}`;
-        resultModal.classList.remove('hidden');
-    }
-}
-
-function startCharging(e) {
-    if (e) e.preventDefault();
-    if (isLogFlying) return;
-    isCharging = true;
-    throwBtnText.textContent = "¡SUELTA PARA LANZAR!";
-    aimGuide.style.opacity = '0';
-}
-
-function releaseThrow(e) {
-    if (e) e.preventDefault();
-    if (isLogFlying || !isCharging) return;
-    isCharging = false;
-
-    const angleRad = (angle * Math.PI) / 180;
-    const speed = (power / 100) * 1.8;
-
-    logVel.set(
-        0, 
-        Math.sin(angleRad) * speed * 0.9, 
-        -Math.cos(angleRad) * speed * 1.2
-    );
-
-    logRotVel.set(0.12, 0.05, 0.02);
-    isLogFlying = true;
-}
-
-throwBtn.addEventListener('mousedown', startCharging);
-throwBtn.addEventListener('mouseup', releaseThrow);
-throwBtn.addEventListener('touchstart', startCharging, { passive: false });
-throwBtn.addEventListener('touchend', releaseThrow, { passive: false });
-
-retryBtn.addEventListener('click', () => {
-    resultModal.classList.add('hidden');
-    resetLogPosition();
-    resetCamera();
-    power = 0;
-    powerFill.style.height = '0%';
-    powerText.textContent = '0%';
-    throwBtnText.textContent = "¡MANTÉN PARA CARGAR!";
-    aimGuide.style.opacity = '1';
-});
-
-initScene();
-animate();
-</script>
-</body>
-</html>
+// Apply Rotations
+logMesh.rotation.x += logRotVel.x;
+logMesh.rotation.y += logRotVel.y;
+logMesh.rotation.z += logRotVel.z;
