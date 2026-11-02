@@ -14,11 +14,12 @@ body {
     font-family: 'Montserrat', sans-serif;
     user-select: none;
     -webkit-user-select: none;
-    touch-action: none;
     overflow: hidden;
     position: fixed;
     width: 100%;
     height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 .font-cinzel {
@@ -37,6 +38,7 @@ body {
     border: 2px solid #D2691E;
     box-shadow: 0 6px 0 #3a1d07, 0 10px 20px rgba(0,0,0,0.4);
     transition: all 0.1s ease;
+    cursor: pointer;
 }
 
 .wood-btn:active {
@@ -53,29 +55,25 @@ body {
 
 <!-- HUD Header -->
 <header class="relative z-10 p-4 flex justify-between items-start pointer-events-none">
-    <div class="glass-panel rounded-2xl p-4 flex items-center space-x-4 pointer-events-auto shadow-2xl border-amber-800/30">
-        <div class="bg-amber-800/40 p-3 rounded-xl border border-amber-600/40">
-            <i class="fa-solid fa-tree text-2xl text-amber-500"></i>
+    <div class="glass-panel rounded-2xl p-3 flex items-center space-x-3 pointer-events-auto shadow-2xl border-amber-800/30">
+        <div class="bg-amber-800/40 p-2.5 rounded-xl border border-amber-600/40">
+            <i class="fa-solid fa-tree text-xl text-amber-500"></i>
         </div>
         <div>
-            <h1 class="font-cinzel text-xl md:text-2xl font-black text-amber-200 tracking-wider">TIRAR TRONCOS</h1>
-            <p class="text-xs text-amber-400/80 font-semibold uppercase tracking-widest">Campeonato Escocés</p>
+            <h1 class="font-cinzel text-lg md:text-xl font-black text-amber-200 tracking-wider">TRONCOS</h1>
+            <p class="text-[10px] text-amber-400/85 font-semibold uppercase tracking-widest">Escocia</p>
         </div>
     </div>
 
-    <div class="flex gap-3 pointer-events-auto">
-        <div class="glass-panel rounded-2xl p-4 text-center min-w-[100px] border-amber-700/30">
-            <p class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Puntuación</p>
-            <p id="scoreDisplay" class="text-2xl font-black text-white font-cinzel">0</p>
+    <div class="flex gap-2 pointer-events-auto">
+        <div class="glass-panel rounded-2xl p-3 text-center min-w-[85px] border-amber-700/30">
+            <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">Puntos</p>
+            <p id="scoreDisplay" class="text-xl font-black text-white font-cinzel">0</p>
         </div>
-        <div class="glass-panel rounded-2xl p-4 text-center min-w-[100px] border-amber-700/30">
-            <p class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Récord</p>
-            <p id="highScoreDisplay" class="text-2xl font-black text-amber-400 font-cinzel">0</p>
+        <div class="glass-panel rounded-2xl p-3 text-center min-w-[85px] border-amber-700/30">
+            <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">Récord</p>
+            <p id="highScoreDisplay" class="text-xl font-black text-amber-400 font-cinzel">0</p>
         </div>
-        <button id="qrBtn" class="glass-panel rounded-2xl p-3 flex flex-col items-center justify-center border-amber-700/30 hover:bg-amber-800/40 transition-colors">
-            <i class="fa-solid fa-qrcode text-xl text-amber-400"></i>
-            <span class="text-[9px] font-bold text-amber-300 uppercase tracking-wider mt-1">QR</span>
-        </button>
     </div>
 </header>
 
@@ -105,21 +103,21 @@ body {
 <div id="aimGuide" class="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none transition-opacity duration-300 w-11/12 max-w-md">
     <div class="glass-panel px-4 py-2 rounded-full border border-amber-500/30 shadow-xl">
         <p class="text-xs font-semibold text-amber-200">
-            <i class="fa-solid fa-hand-pointer mr-1 animate-bounce"></i> Mantén presionado el botón para cargar fuerza
+            <i class="fa-solid fa-hand-pointer mr-1 animate-bounce"></i> Mantén presionado el botón para cargar
         </p>
     </div>
 </div>
 
 <!-- Footer Controls -->
 <footer class="relative z-10 p-4 flex justify-center items-center pointer-events-none">
-    <button id="throwBtn" class="wood-btn pointer-events-auto px-8 py-3 rounded-2xl text-lg font-black text-amber-100 tracking-wider font-cinzel flex items-center justify-center gap-2 active:scale-95 transition-transform">
+    <button id="throwBtn" class="wood-btn pointer-events-auto px-8 py-3.5 rounded-2xl text-lg font-black text-amber-100 tracking-wider font-cinzel flex items-center justify-center gap-2 active:scale-95 transition-transform">
         <i class="fa-solid fa-person-running text-xl"></i>
         <span id="throwBtnText">¡MANTÉN PARA CARGAR!</span>
     </button>
 </footer>
 
 <!-- Result Modal -->
-<div id="resultModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+<div id="resultModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden pointer-events-auto">
     <div class="glass-panel border-2 border-amber-600/50 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
         <div class="w-16 h-16 bg-amber-600/30 rounded-2xl border border-amber-400/40 flex items-center justify-center mx-auto mb-3 text-amber-400 text-2xl">
             <i id="resultIcon" class="fa-solid fa-trophy"></i>
@@ -138,7 +136,7 @@ body {
                 <span id="modalScore" class="text-xl font-black text-amber-400 font-cinzel">+0</span>
             </div>
         </div>
-        <button id="retryBtn" class="wood-btn w-full py-3 rounded-xl text-base font-black text-amber-100 font-cinzel tracking-wider">
+        <button id="retryBtn" class="wood-btn w-full py-3.5 rounded-xl text-base font-black text-amber-100 font-cinzel tracking-wider pointer-events-auto">
             <i class="fa-solid fa-rotate-right mr-1"></i> INTENTAR DE NUEVO
         </button>
     </div>
@@ -279,6 +277,9 @@ function resetLogPosition() {
     logVel.set(0, 0, 0);
     logRotVel.set(0, 0, 0);
     isLogFlying = false;
+    power = 0;
+    powerFill.style.height = '0%';
+    powerText.textContent = '0%';
 }
 
 function resetCamera() {
@@ -292,9 +293,9 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// Eventos de carga de fuerza
+// Controladores táctiles y de mouse robustos para cargar el tiro
 const startCharging = (e) => {
-    if (isLogFlying) return;
+    if (isLogFlying || !resultModal.classList.contains('hidden')) return;
     isCharging = true;
     power = 0;
     powerDirection = 1;
@@ -304,25 +305,37 @@ const endCharging = (e) => {
     if (!isCharging || isLogFlying) return;
     isCharging = false;
     
-    // Lanzar tronco
     isLogFlying = true;
-    const force = (power / 100) * 0.8 + 0.2;
+    const force = (power / 100) * 1.2 + 0.3; // Rango de fuerza ajustado para mayor impulso
     const rad = (angle * Math.PI) / 180;
     
-    logVel.set(0, Math.sin(rad) * force * 0.4, -Math.cos(rad) * force * 0.5);
-    logRotVel.set(0.15, 0.05, 0.02);
+    logVel.set(0, Math.sin(rad) * force * 0.45, -Math.cos(rad) * force * 0.6);
+    logRotVel.set(0.18, 0.06, 0.02);
 };
 
+// Eventos de interacción corregidos con soporte touch nativo confiable
 throwBtn.addEventListener('mousedown', startCharging);
 window.addEventListener('mouseup', endCharging);
-throwBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startCharging(e); });
-window.addEventListener('touchend', (e) => { e.preventDefault(); endCharging(e); });
 
-retryBtn.addEventListener('click', () => {
+throwBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startCharging(e);
+}, { passive: false });
+
+window.addEventListener('touchend', (e) => {
+    endCharging(e);
+}, { passive: true });
+
+// Evento de reintentar optimizado para celular (soporte click y touchend directo)
+const resetGameAction = (e) => {
+    e.preventDefault();
     resultModal.classList.add('hidden');
     resetLogPosition();
     resetCamera();
-});
+};
+
+retryBtn.addEventListener('click', resetGameAction);
+retryBtn.addEventListener('touchend', resetGameAction);
 
 function animate() {
     requestAnimationFrame(animate);
@@ -350,12 +363,10 @@ function animate() {
         logMesh.rotation.x += logRotVel.x;
         logMesh.rotation.y += logRotVel.y;
 
-        // Seguir con la cámara
         camera.position.z = logPos.z + 10;
         camera.position.y = Math.max(3, logPos.y + 3);
         camera.lookAt(logPos.x, logPos.y, logPos.z - 5);
 
-        // Comprobar caída al suelo
         if (logPos.y <= 0.3) {
             logPos.y = 0.3;
             isLogFlying = false;
