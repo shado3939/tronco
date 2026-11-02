@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lanzamiento de Tronco - Caber Toss Game</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@400;600;800&display=swap');
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+.font-cinzel {
+    font-family: 'Cinzel', serif;
+}
+
+.glass-panel {
+    background: rgba(20, 30, 15, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.wood-btn {
+    background: linear-gradient(135deg, #8B4513 0%, #5C2E0B 100%);
+    border: 2px solid #D2691E;
+    box-shadow: 0 6px 0 #3a1d07, 0 10px 20px rgba(0,0,0,0.4);
+    transition: all 0.1s ease;
+}
+
+.wood-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #3a1d07, 0 5px 10px rgba(0,0,0,0.4);
+}
+
+.power-bar-fill {
+    transition: height 0.05s linear;
+}
+</style>
+</head>
+<body class="bg-slate-900 text-white overflow-hidden h-screen w-screen flex flex-col justify-between">
+
+<!-- HUD Header -->
+<header class="relative z-10 p-3 flex justify-between items-start pointer-events-none gap-2">
+    <div class="glass-panel rounded-xl p-2.5 flex items-center space-x-2.5 pointer-events-auto shadow-xl border-amber-800/30">
+        <div class="bg-amber-800/40 p-2 rounded-lg border border-amber-600/40">
+            <i class="fa-solid fa-tree text-lg text-amber-500"></i>
+        </div>
+        <div>
+            <h1 class="font-cinzel text-sm md:text-xl font-black text-amber-200 tracking-wider">TIRAR TRONCOS</h1>
+            <p class="text-[10px] text-amber-400/80 font-semibold uppercase tracking-widest">Campeonato</p>
+        </div>
+    </div>
+
+    <div class="flex gap-2 pointer-events-auto">
+        <!-- Score Board -->
+        <div class="glass-panel rounded-xl p-2.5 text-center min-w-[75px] border-amber-700/30">
+            <p class="text-[9px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">Puntos</p>
+            <p id="scoreDisplay" class="text-xl font-black text-white font-cinzel">0</p>
+        </div>
+        <!-- High Score Board -->
+        <div class="glass-panel rounded-xl p-2.5 text-center min-w-[75px] border-amber-700/30">
+            <p class="text-[9px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">Récord</p>
+            <p id="highScoreDisplay" class="text-xl font-black text-amber-400 font-cinzel">0</p>
+        </div>
+    </div>
+</header>
+
+<!-- Canvas Container for Three.js -->
+<div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+<!-- Power & Angle Meter Overlay -->
+<div id="controls-overlay" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-3 pointer-events-none">
+    <!-- Angle Indicator -->
+    <div class="glass-panel p-2 rounded-xl flex flex-col items-center w-14">
+        <span class="text-[9px] font-bold text-amber-300 uppercase tracking-wider mb-1">Ángulo</span>
+        <div class="w-1.5 h-20 bg-slate-800 rounded-full relative overflow-hidden flex flex-col justify-end">
+            <div id="angleFill" class="w-full bg-gradient-to-t from-emerald-500 via-amber-400 to-rose-500 rounded-full" style="height: 50%;"></div>
+        </div>
+        <span id="angleText" class="text-[10px] font-black text-white mt-1">45°</span>
+    </div>
+
+    <!-- Power Meter -->
+    <div class="glass-panel p-2 rounded-xl flex flex-col items-center w-16">
+        <span class="text-[9px] font-bold text-amber-300 uppercase tracking-wider mb-1">Fuerza</span>
+        <div class="w-3 h-32 bg-slate-800 rounded-full relative overflow-hidden flex flex-col justify-end p-0.5 border border-slate-700">
+            <div id="powerFill" class="power-bar-fill w-full bg-gradient-to-t from-emerald-500 via-yellow-400 to-red-600 rounded-full" style="height: 0%;"></div>
+        </div>
+        <span id="powerText" class="text-[10px] font-black text-white mt-1">0%</span>
+    </div>
+</div>
+
+<!-- Instructions & Aim Help -->
+<div id="aimGuide" class="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none transition-opacity duration-300 w-11/12 max-w-xs">
+    <div class="glass-panel px-4 py-2.5 rounded-full border border-amber-500/30 shadow-xl">
+        <p class="text-xs font-semibold text-amber-200">
+            <i class="fa-solid fa-hand-pointer mr-1.5 animate-bounce"></i> Mantén presionado abajo para cargar
+        </p>
+    </div>
+</div>
+
+<!-- Footer Controls -->
+<footer class="relative z-10 p-4 pb-6 flex justify-center items-center pointer-events-none">
+    <button id="throwBtn" class="wood-btn pointer-events-auto w-full max-w-sm py-4 rounded-2xl text-lg font-black text-amber-100 tracking-wider font-cinzel flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-2xl">
+        <i class="fa-solid fa-person-running text-xl"></i>
+        <span id="throwBtnText">¡MANTÉN PARA CARGAR!</span>
+    </button>
+</footer>
+
+<!-- Result / Game Over Modal -->
+<div id="resultModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass-panel border-2 border-amber-600/50 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl"></div>
+
+        <div class="w-16 h-16 bg-amber-600/30 rounded-2xl border border-amber-400/40 flex items-center justify-center mx-auto mb-3 text-amber-400 text-2xl">
+            <i id="resultIcon" class="fa-solid fa-trophy"></i>
+        </div>
+
+        <h2 id="resultTitle" class="text-2xl font-black font-cinzel text-amber-200 mb-1">¡EXCELENTE!</h2>
+        <p id="resultSubtitle" class="text-xs text-slate-300 mb-4">Tu tronco voló una distancia increíble.</p>
+
+        <div class="bg-slate-900/80 rounded-2xl p-3 border border-slate-800 mb-5 flex justify-around">
+            <div>
+                <span class="block text-[10px] font-bold text-amber-400/80 uppercase">Distancia</span>
+                <span id="modalDistance" class="text-xl font-black text-white font-cinzel">0.0 m</span>
+            </div>
+            <div class="w-px bg-slate-800"></div>
+            <div>
+                <span class="block text-[10px] font-bold text-amber-400/80 uppercase">Puntos</span>
+                <span id="modalScore" class="text-xl font-black text-amber-400 font-cinzel">+0</span>
+            </div>
+        </div>
+
+        <button id="retryBtn" class="wood-btn w-full py-3.5 rounded-xl text-base font-black text-amber-100 font-cinzel tracking-wider flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i> INTENTAR DE NUEVO
+        </button>
+    </div>
+</div>
+
+<script>
+/* GAME STATE VARIABLES */
+let scene, camera, renderer;
+let logMesh;
+
+let isCharging = false;
+let power = 0;
+let powerDirection = 1;
+let angle = 45;
+let angleDirection = 1;
+let isLogFlying = false;
+let score = 0;
+let highScore = localStorage.getItem('caber_toss_highscore') || 0;
+
+let logPos = new THREE.Vector3(0, 2, 0);
+let logVel = new THREE.Vector3(0, 0, 0);
+let logRotVel = new THREE.Vector3(0, 0, 0);
+
+// HTML Elements
+const powerFill = document.getElementById('powerFill');
+const powerText = document.getElementById('powerText');
+const angleFill = document.getElementById('angleFill');
+const angleText = document.getElementById('angleText');
+const throwBtn = document.getElementById('throwBtn');
+const throwBtnText = document.getElementById('throwBtnText');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const highScoreDisplay = document.getElementById('highScoreDisplay');
+const resultModal = document.getElementById('resultModal');
+const modalDistance = document.getElementById('modalDistance');
+const modalScore = document.getElementById('modalScore');
+const retryBtn = document.getElementById('retryBtn');
+const aimGuide = document.getElementById('aimGuide');
+
+highScoreDisplay.textContent = highScore;
+
+/* INITIALIZE THREE.JS SCENE */
+function initScene() {
+    const container = document.getElementById('canvas-container');
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87CEEB);
+    scene.fog = new THREE.FogExp2(0x87CEEB, 0.008);
+
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
+    sunLight.position.set(40, 80, 20);
+    scene.add(sunLight);
+
+    createGround();
+    createLog();
+    createEnvironment();
+    resetCamera();
+
+    window.addEventListener('resize', onWindowResize);
+}
+
+function createGround() {
+    const groundGeo = new THREE.PlaneGeometry(300, 600);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x4e8d35, roughness: 0.9 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    for (let z = -20; z >= -400; z -= 20) {
+        const lineGeo = new THREE.PlaneGeometry(40, 0.8);
+        const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true });
+        const line = new THREE.Mesh(lineGeo, lineMat);
+        line.rotation.x = -Math.PI / 2;
+        line.position.set(0, 0.02, z);
+        scene.add(line);
+    }
+}
+
+function createLog() {
+    const logGroup = new THREE.Group();
+
+    const logGeo = new THREE.CylinderGeometry(0.35, 0.28, 7, 16);
+    const logMat = new THREE.MeshStandardMaterial({ color: 0x6e4320, roughness: 0.8 });
+    const logMeshBody = new THREE.Mesh(logGeo, logMat);
+    logGroup.add(logMeshBody);
+
+    logMesh = logGroup;
+    scene.add(logMesh);
+    resetLogPosition();
+}
+
+function createEnvironment() {
+    const treeGeo = new THREE.ConeGeometry(3, 10, 6);
+    const trunkGeo = new THREE.CylinderGeometry(0.5, 0.7, 3, 6);
+    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1e4620 });
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3d2314 });
+
+    for (let i = 0; i < 30; i++) {
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = 1.5;
+        tree.add(trunk);
+
+        const leaves = new THREE.Mesh(treeGeo, leavesMat);
+        leaves.position.y = 6;
+        tree.add(leaves);
+
+        const side = Math.random() > 0.5 ? 1 : -1;
+        const x = (25 + Math.random() * 30) * side;
+        const z = 10 - Math.random() * 200;
+
+        tree.position.set(x, 0, z);
+        scene.add(tree);
+    }
+}
+
+function resetLogPosition() {
+    logPos.set(0, 3.5, 0);
+    logMesh.position.copy(logPos);
+    logMesh.rotation.set(Math.PI / 4, 0, 0);
+    logVel.set(0, 0, 0);
+    logRotVel.set(0, 0, 0);
+    isLogFlying = false;
+}
+
+function resetCamera() {
+    camera.position.set(0, 5, 12);
+    camera.lookAt(0, 3, 0);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (!isLogFlying) {
+        angle += 0.8 * angleDirection;
+        if (angle > 75 || angle < 25) angleDirection *= -1;
+
+        angleFill.style.height = `${((angle - 25) / 50) * 100}%`;
+        angleText.textContent = `${Math.round(angle)}°`;
+
+        if (isCharging) {
+            power += 2.2 * powerDirection;
+            if (power >= 100) { power = 100; powerDirection = -1; }
+            if (power <= 0) { power = 0; powerDirection = 1; }
+
+            powerFill.style.height = `${power}%`;
+            powerText.textContent = `${Math.round(power)}%`;
+        }
+    } else {
+        updateLogPhysics();
+    }
+
+    renderer.render(scene, camera);
+}
+
+function updateLogPhysics() {
+    logVel.y -= 0.015;
+    logPos.add(logVel);
+    logMesh.position.copy(logPos);
+
+    logMesh.rotation.x += logRotVel.x;
+    logMesh.rotation.y += logRotVel.y;
+    logMesh.rotation.z += logRotVel.z;
+
+    camera.position.z = logPos.z + 14;
+    camera.position.y = Math.max(logPos.y + 3, 4);
+    camera.position.x = logPos.x * 0.5;
+    camera.lookAt(logPos.x, logPos.y, logPos.z - 5);
+
+    if (logPos.y <= 1.8) {
+        logPos.y = 1.8;
+        isLogFlying = false;
+        
+        const distance = Math.abs(Math.round(logPos.z * 10) / 10);
+        const earnedPoints = Math.round(distance * 5);
+        
+        score += earnedPoints;
+        scoreDisplay.textContent = score;
+
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('caber_toss_highscore', highScore);
+            highScoreDisplay.textContent = highScore;
+        }
+
+        modalDistance.textContent = `${distance} m`;
+        modalScore.textContent = `+${earnedPoints}`;
+        resultModal.classList.remove('hidden');
+    }
+}
+
+function startCharging() {
+    if (isLogFlying) return;
+    isCharging = true;
+    throwBtnText.textContent = "¡SUELTA PARA LANZAR!";
+    aimGuide.style.opacity = '0';
+}
+
+function releaseThrow() {
+    if (isLogFlying || !isCharging) return;
+    isCharging = false;
+
+    const angleRad = (angle * Math.PI) / 180;
+    const speed = (power / 100) * 1.8;
+
+    logVel.set(
+        0, 
+        Math.sin(angleRad) * speed * 0.9, 
+        -Math.cos(angleRad) * speed * 1.2
+    );
+
+    logRotVel.set(0.12, 0.05, 0.02);
+    isLogFlying = true;
+    throwBtn
