@@ -293,7 +293,7 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// Controladores táctiles y de mouse robustos para cargar el tiro
+// Controladores táctiles y de mouse robustos
 const startCharging = (e) => {
     if (isLogFlying || !resultModal.classList.contains('hidden')) return;
     isCharging = true;
@@ -306,14 +306,13 @@ const endCharging = (e) => {
     isCharging = false;
     
     isLogFlying = true;
-    const force = (power / 100) * 1.2 + 0.3; // Rango de fuerza ajustado para mayor impulso
+    const force = (power / 100) * 1.4 + 0.4; // Impulso balanceado y potente al 100%
     const rad = (angle * Math.PI) / 180;
     
-    logVel.set(0, Math.sin(rad) * force * 0.45, -Math.cos(rad) * force * 0.6);
+    logVel.set(0, Math.sin(rad) * force * 0.45, -Math.cos(rad) * force * 0.65);
     logRotVel.set(0.18, 0.06, 0.02);
 };
 
-// Eventos de interacción corregidos con soporte touch nativo confiable
 throwBtn.addEventListener('mousedown', startCharging);
 window.addEventListener('mouseup', endCharging);
 
@@ -326,7 +325,6 @@ window.addEventListener('touchend', (e) => {
     endCharging(e);
 }, { passive: true });
 
-// Evento de reintentar optimizado para celular (soporte click y touchend directo)
 const resetGameAction = (e) => {
     e.preventDefault();
     resultModal.classList.add('hidden');
@@ -337,18 +335,23 @@ const resetGameAction = (e) => {
 retryBtn.addEventListener('click', resetGameAction);
 retryBtn.addEventListener('touchend', resetGameAction);
 
+// Reloj para medir el tiempo real y sincronizar la velocidad en cualquier dispositivo
+const clock = new THREE.Clock();
+
 function animate() {
     requestAnimationFrame(animate);
+    
+    const delta = clock.getDelta();
 
     if (!isLogFlying) {
-        angle += 0.6 * angleDirection;
+        angle += 25 * delta * angleDirection; // Velocidad de ángulo sincronizada por tiempo
         if (angle > 75 || angle < 25) angleDirection *= -1;
 
         angleFill.style.height = `${((angle - 25) / 50) * 100}%`;
         angleText.textContent = `${Math.round(angle)}°`;
 
         if (isCharging) {
-            power += 2.5 * powerDirection;
+            power += 90 * delta * powerDirection; // Carga de 0 a 100 en un poco más de 1 segundo exacto independientemente de los FPS
             if (power >= 100) { power = 100; powerDirection = -1; }
             if (power <= 0) { power = 0; powerDirection = 1; }
 
