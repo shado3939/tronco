@@ -285,6 +285,12 @@ function resetCamera() {
     camera.lookAt(0, 3, 0);
 }
 
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -346,14 +352,16 @@ function updateLogPhysics() {
     }
 }
 
-function startCharging() {
+function startCharging(e) {
+    e.preventDefault();
     if (isLogFlying) return;
     isCharging = true;
     throwBtnText.textContent = "¡SUELTA PARA LANZAR!";
     aimGuide.style.opacity = '0';
 }
 
-function releaseThrow() {
+function releaseThrow(e) {
+    e.preventDefault();
     if (isLogFlying || !isCharging) return;
     isCharging = false;
 
@@ -368,4 +376,28 @@ function releaseThrow() {
 
     logRotVel.set(0.12, 0.05, 0.02);
     isLogFlying = true;
-    throwBtn
+}
+
+// Event Listeners for Button Interaction
+throwBtn.addEventListener('mousedown', startCharging);
+throwBtn.addEventListener('mouseup', releaseThrow);
+throwBtn.addEventListener('touchstart', startCharging, { passive: false });
+throwBtn.addEventListener('touchend', releaseThrow, { passive: false });
+
+retryBtn.addEventListener('click', () => {
+    resultModal.classList.add('hidden');
+    resetLogPosition();
+    resetCamera();
+    power = 0;
+    powerFill.style.height = '0%';
+    powerText.textContent = '0%';
+    throwBtnText.textContent = "¡MANTÉN PARA CARGAR!";
+    aimGuide.style.opacity = '1';
+});
+
+// Start initialization
+initScene();
+animate();
+</script>
+</body>
+</html>
